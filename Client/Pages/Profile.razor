@@ -1,0 +1,22 @@
+﻿@page "/profile/{Id:guid}"
+@inject UserProfileService userProfileService
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private UserProfile profile;
+
+    protected override async Task OnInitializedAsync()
+    {
+        profile = await userProfileService.GetProfileById(Id);
+    }
+}
+
+@if (profile != null)
+{
+    <UserProfileComponent Profile="profile" />
+}
+else
+{
+    <p>Loading profile...</p>
+}

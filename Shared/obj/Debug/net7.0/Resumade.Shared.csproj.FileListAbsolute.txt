@@ -1,0 +1,11 @@
+C:\Unicaf\Resumade\Shared\bin\Debug\net7.0\Resumade.Shared.deps.json
+C:\Unicaf\Resumade\Shared\bin\Debug\net7.0\Resumade.Shared.dll
+C:\Unicaf\Resumade\Shared\bin\Debug\net7.0\Resumade.Shared.pdb
+C:\Unicaf\Resumade\Shared\obj\Debug\net7.0\Resumade.Shared.GeneratedMSBuildEditorConfig.editorconfig
+C:\Unicaf\Resumade\Shared\obj\Debug\net7.0\Resumade.Shared.AssemblyInfoInputs.cache
+C:\Unicaf\Resumade\Shared\obj\Debug\net7.0\Resumade.Shared.AssemblyInfo.cs
+C:\Unicaf\Resumade\Shared\obj\Debug\net7.0\Resumade.Shared.csproj.CoreCompileInputs.cache
+C:\Unicaf\Resumade\Shared\obj\Debug\net7.0\Resumade.Shared.dll
+C:\Unicaf\Resumade\Shared\obj\Debug\net7.0\refint\Resumade.Shared.dll
+C:\Unicaf\Resumade\Shared\obj\Debug\net7.0\Resumade.Shared.pdb
+C:\Unicaf\Resumade\Shared\obj\Debug\net7.0\ref\Resumade.Shared.dll

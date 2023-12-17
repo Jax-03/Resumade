@@ -1,0 +1,45 @@
+﻿@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@inject NavigationMenuItemsService NavigationMenuItemsService
+@inject IAccessTokenProvider TokenProvider 
+@inject NavigationManager NavigationManager 
+
+<div class="nav-scrollable">
+    <nav class="flex-column">
+        <div class="nav-item px-3">
+            <span class="menu-title" style="font-size: 1.5rem;">Filter by industry:</span>
+        </div>
+        @foreach (var item in menuItems)
+        {
+            <div class="nav-item px-1" style="height: 2rem;">
+                <NavLink class="nav-link" href="@($"/index/{item.Id}")" @onclick="() => HandleNavItemClick(item.Id)">
+                    @item.Name
+                </NavLink>
+            </div>
+        }
+    </nav>
+</div>
+
+@code {
+    [Parameter] public Action<Guid> OnIndustrySelected { get; set; }
+
+    private List<NavigationMenuItem> menuItems = new List<NavigationMenuItem>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var tokenResult = await TokenProvider.RequestAccessToken();
+        if (tokenResult.TryGetToken(out var token))
+        {
+            menuItems = await NavigationMenuItemsService.GetMenuItemsAsync();
+        }
+        else
+        {
+            NavigationManager.NavigateTo("/");
+        }
+    }
+
+    void HandleNavItemClick(Guid industryId)
+    {
+        OnIndustrySelected?.Invoke(industryId);
+    }
+
+}

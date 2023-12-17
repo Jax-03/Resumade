@@ -1,0 +1,23 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v7.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v7.0": {
+      "Resumade.Shared/1.0.0": {
+        "runtime": {
+          "Resumade.Shared.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "Resumade.Shared/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

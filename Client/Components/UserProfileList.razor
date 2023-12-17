@@ -1,0 +1,78 @@
+﻿@using Resumade.Client.Services
+@inject UserProfileService UserProfileService
+@inject NavigationManager NavigationManager
+
+<div class="container">
+    @if (userProfileResult != null && userProfileResult.Items.Any())
+    {
+        <div class="row">
+            <div class="col-12">
+                @foreach (var profile in userProfileResult.Items)
+                {
+                    <UserProfileSummaryComponent UserProfileSummary="profile" />
+                }
+            </div>
+        </div>
+        <div> 
+            <button @onclick="LoadPreviousPage" disabled="@(currentPage == 1)">Previous</button>
+            Page @currentPage of @userProfileResult.TotalPages
+            <button @onclick="LoadNextPage" disabled="@(currentPage == userProfileResult.TotalPages)">Next</button>
+        </div>
+    }
+</div>
+
+@code {
+
+    [CascadingParameter(Name = "ActiveFilterId")]
+    public Guid ActiveFilterId { get; set; }
+
+    private PagedResult<UserProfileSummary> userProfileResult = new PagedResult<UserProfileSummary>();
+    private int currentPage = 1;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
+        if (uri.Segments.Length == 2 && uri.Segments[1].Trim('/') == "index")
+        {
+            ActiveFilterId = Guid.Empty;
+        }
+
+        await LoadData();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        if (ActiveFilterId == Guid.Empty)
+        {
+            userProfileResult = await UserProfileService.GetUserProfileSummaryCardsAsync(currentPage);
+        }
+        else
+        {
+            userProfileResult = await UserProfileService.GetUserProfileSummaryCardsByFilterIdAsync(ActiveFilterId, currentPage);
+        }
+    }
+
+    private async Task LoadNextPage()
+    {
+        if (currentPage < userProfileResult.TotalPages)
+        {
+            currentPage++;
+            await LoadData();
+        }
+    }
+
+    private async Task LoadPreviousPage()
+    {
+        if (currentPage > 1)
+        {
+            currentPage--;
+            await LoadData();
+        }
+    }
+
+}

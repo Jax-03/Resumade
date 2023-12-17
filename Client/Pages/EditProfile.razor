@@ -1,0 +1,462 @@
+﻿@inject UserProfileService UserProfileService
+@inject DropdownDataService DropdownDataService
+@inject NavigationManager NavigationManager
+
+@page "/EditProfile"
+@page "/EditProfile/{Id:guid}"
+@using System.Net.Http.Headers
+
+<div class="card mx-auto" style="width: 80%;">
+    <div class="card-body">
+        <h3 class="card-title text-center">Edit Resume</h3>
+        <EditForm Model="@_userProfile" OnValidSubmit="@HandleValidSubmit">
+            <DataAnnotationsValidator/>
+            <ValidationSummary/>
+
+            <div class="container mt-4 mb-5">
+                <div class="row">
+                    <div class="d-flex align-items-center justify-content-start mb-3">
+                        <!-- Profile Image Preview -->
+                        <img src="@GetProfilePictureUrl(_userProfile.ImageUrl)" alt="Default Profile Picture"
+                             class="me-3" style="width: 6rem; height: 6rem; border-radius: 50%; object-fit: cover;"/>
+
+                        <!-- File Upload Input and Label -->
+                        <div>
+                            <InputFile OnChange="@OnInputFileChange" class="form-control"/>
+                            <p>Upload a Profile Picture</p>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <select class="form-select" @bind="selectedIndustryId">
+                            <option value="">Choose your Industry</option>
+                            @foreach (var industry in _availableIndustries)
+                            {
+                                <option value="@industry.Id">@industry.Name</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <InputText class="form-control" @bind-Value="_userProfile.Name" placeholder="First Name"/>
+                        <ValidationMessage For="@(() => _userProfile.Name)"/>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <InputText class="form-control" @bind-Value="_userProfile.LastName" placeholder="Last Name"/>
+                        <ValidationMessage For="@(() => _userProfile.LastName)"/>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <InputText class="form-control" @bind-Value="_userProfile.Phone" placeholder="Phone Number"/>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <InputText class="form-control" @bind-Value="_userProfile.Email" placeholder="Email Address"/>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <InputText class="form-control" @bind-Value="_userProfile.Location" placeholder="City and Country"/>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-12 mb-3">
+                        <InputTextArea class="form-control" @bind-Value="_userProfile.Summary" placeholder="Insert a bio"/>
+                    </div>
+                </div>
+
+
+                <!-- Work History Section -->
+                <div class="row mt-3">
+                    <div class="col-12 mb-3">
+                        <div class="form-group">
+                            <h3 class="text-primary">Work History</h3>
+                            @foreach (var work in _userProfile.WorkHistories)
+                            {
+                                <div>
+                                    <InputText class="form-control" @bind-Value="work.Company" @onblur="() => { ValidateWorkHistory(work); }" placeholder="Company Name"/>
+                                    <p class="text-danger">@work.CompanyErrorMsg</p>
+                                    <InputText class="form-control" @bind-Value="work.Position" @onblur="() => { ValidateWorkHistory(work); }" placeholder="Job Title"/>
+                                    <p class="text-danger">@work.PositionErrorMsg</p>
+                                    <InputText class="form-control" @bind-Value="work.Duration" @onblur="() => { ValidateWorkHistory(work); }" placeholder="Length of employment"/>
+                                    <p class="text-danger">@work.DurationErrorMsg</p>
+                                    <InputTextArea class="form-control" @bind-Value="work.Description" @onblur="() => { ValidateWorkHistory(work); }" placeholder="Description"/>
+                                    <p class="text-danger">@work.DescriptionErrorMsg</p>
+                                </div>
+                            }
+                            <a @onclick="AddWorkHistory" style="cursor: pointer; user-select: none; text-decoration: none; color: #fe5f63;">+ Add Another</a>
+                        </div>
+                    </div>
+                </div>
+
+
+                <!-- Education Section -->
+                <div class="row mt-3">
+                    <div class="col-12 mb-3">
+                        <div class="form-group">
+                              <h3 class="text-primary">Education</h3>
+                            @foreach (var edu in _userProfile.Educations)
+                            {
+                                <div>
+                                    <InputText class="form-control" @bind-Value="edu.Institution" @onblur="() => { ValidateEducation(edu); }" placeholder="Institution Name"/>
+                                    <p class="text-danger">@edu.InstitutionErrorMsg</p>
+                                    <InputText class="form-control" @bind-Value="edu.Qualification" @onblur="() => { ValidateEducation(edu); }" placeholder="Qualification"/>
+                                    <p class="text-danger">@edu.QualificationErrorMsg</p>
+                                    <InputText class="form-control" @bind-Value="edu.Duration" @onblur="() => { ValidateEducation(edu); }" placeholder="Length of studies"/>
+                                    <p class="text-danger">@edu.DurationErrorMsg</p>
+                                </div>
+                            }
+                            <a @onclick="AddEducation" style="cursor: pointer; user-select: none; text-decoration: none; color: #fe5f63;">+ Add Another</a>
+                        </div>
+                    </div>
+                </div>
+
+
+                <!--Skills-->
+                <div class="row mt-3">
+                    <div class="col-12 mb-3">
+                        <div class="form-group">
+                            <div class="skills mb-4">
+                                <h3 class="text-primary">Skills</h3>
+                                <div class="mb-3">
+                                    <InputSelect @bind-Value="selectedSkill.Id" class="form-select">
+                                        <option value="">Select a skill</option>
+                                        @foreach (var skill in _availableSkills)
+                                        {
+                                            <option value="@skill.Id">@skill.Name</option>
+                                        }
+                                    </InputSelect>
+                                    <button type="button" @onclick="AddSkill" class="btn btn-secondary mt-2">Add Skill</button>
+                                </div>
+                                <ul class="list-inline">
+                                    @foreach (var skill in _userProfile.Skills)
+                                    {
+                                        <li class="list-inline-item badge bg-secondary">
+                                            @skill.Name <a @onclick="() => RemoveSkill(skill)" aria-label="Remove" style="cursor: pointer; color: white;">x</a>
+                                        </li>
+                                    }
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+                <!--Hobbies-->
+                <div class="row mt-3">
+                    <div class="col-12 mb-3">
+                        <div class="form-group">
+                            <div class="hobbies mb-4">
+                                <h3 class="text-primary">Hobbies</h3>
+                                <div class="mb-3">
+                                    <InputSelect @bind-Value="selectedHobby.Id" class="form-select">
+                                        <option value="">Select a hobby</option>
+                                        @foreach (var hobby in _availableHobbies)
+                                        {
+                                            <option value="@hobby.Id">@hobby.Name</option>
+                                        }
+                                    </InputSelect>
+                                    <button type="button" @onclick="AddHobby" class="btn btn-secondary mt-2">Add Hobby</button>
+                                </div>
+                                <ul class="list-inline">
+                                    @foreach (var hobby in _userProfile.Hobbies)
+                                    {
+                                        <li class="list-inline-item badge bg-secondary">
+                                            @hobby.Name
+                                            <a type="button" @onclick="() => RemoveHobby(hobby)" style="cursor: pointer; color: white;">x</a>
+                                        </li>
+                                    }
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="row mt-3">
+                    <div class="col-12 mb-3">
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-primary">Save Resume</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </EditForm>
+    </div>
+</div>
+
+<style>
+    .list-inline-item:not(:last-child) {
+        margin-right: 0.5rem;
+    }
+</style>
+
+@code {
+
+    [Parameter] public Guid Id { get; set; }
+
+    private string GetProfilePictureUrl(string imageUrl)
+    {
+        return string.IsNullOrEmpty(imageUrl) ? "Media/ProfilePictures/Default.jpg" : imageUrl;
+    }
+
+    private UserProfile _userProfile = new UserProfile()
+    {
+        Industry = new Industry()
+    };
+
+    private List<Skill> _allAvailableSkills = new List<Skill>();
+    private List<Hobby> _allAvailableHobbies = new List<Hobby>();
+    private List<Skill> _availableSkills = new List<Skill>();
+    private List<Hobby> _availableHobbies = new List<Hobby>();
+    private List<Industry> _availableIndustries = new List<Industry>();
+    private string IndustryValidationErrorMessage { get; set; }
+    private string errorMessage;
+
+    Guid _selectedIndustryId;
+
+    Guid selectedIndustryId
+    {
+        get { return _selectedIndustryId; }
+        set
+        {
+            _selectedIndustryId = value;
+            var matchedIndustry = _availableIndustries.FirstOrDefault(i => i.Id.Equals(_selectedIndustryId));
+            if (matchedIndustry != null)
+            {
+                _userProfile.Industry = matchedIndustry;
+            }
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Id != Guid.Empty)
+        {
+            _userProfile = await UserProfileService.GetProfileById(Id);
+        }
+
+        if (_userProfile.Industry != null)
+        {
+            selectedIndustryId = _userProfile.Industry.Id; // Assign the ID
+        }
+
+        _allAvailableSkills = await DropdownDataService.GetSkillsAsync();
+        _allAvailableHobbies = await DropdownDataService.GetHobbiesAsync();
+        _availableIndustries = await DropdownDataService.GetIndustryAsync();
+
+        // If there are no work histories, add an empty one to the list
+        if (_userProfile.WorkHistories == null || !_userProfile.WorkHistories.Any())
+        {
+            _userProfile.WorkHistories = new List<WorkHistory> { new WorkHistory() };
+        }
+
+        if (_userProfile.Educations == null || !_userProfile.Educations.Any())
+        {
+            _userProfile.Educations = new List<Education> { new Education() };
+        }
+        
+        _availableSkills = new List<Skill>(_allAvailableSkills);
+        _availableHobbies = new List<Hobby>(_allAvailableHobbies);
+        
+        if (_userProfile != null)
+        {
+            _availableSkills = _availableSkills.Where(sk => _userProfile.Skills.All(us => us.Id != sk.Id)).ToList();
+            _availableHobbies = _availableHobbies.Where(hb => _userProfile.Hobbies.All(uh => uh.Id != hb.Id)).ToList();
+        }
+    }
+
+    private void UpdateSelectedIndustry(ChangeEventArgs e)
+    {
+        selectedIndustryId = Guid.Parse(e.Value.ToString());
+        _userProfile.Industry = _availableIndustries.FirstOrDefault(i => i.Id.Equals(selectedIndustryId));
+    }
+
+    private void AddWorkHistory()
+    {
+        _userProfile.WorkHistories.Add(new WorkHistory());
+    }
+
+    private void AddEducation()
+    {
+        _userProfile.Educations.Add(new Education());
+    }
+
+    public async Task HandleValidSubmit()
+    {
+        if (selectedIndustryId == Guid.Empty)
+        {
+            IndustryValidationErrorMessage = "You must select an industry.";
+            return;
+        }
+        else
+        {
+            IndustryValidationErrorMessage = null;
+        }
+        
+        if (_userProfile.WorkHistories.Any(wh =>
+                (!string.IsNullOrEmpty(wh.Company) || !string.IsNullOrEmpty(wh.Position) || !string.IsNullOrEmpty(wh.Duration) || !string.IsNullOrEmpty(wh.Description)) &&
+                (!string.IsNullOrWhiteSpace(wh.CompanyErrorMsg) ||
+                 !string.IsNullOrWhiteSpace(wh.PositionErrorMsg) ||
+                 !string.IsNullOrWhiteSpace(wh.DurationErrorMsg) ||
+                 !string.IsNullOrWhiteSpace(wh.DescriptionErrorMsg))))
+        {
+            errorMessage = "Please correct the errors in Work History section.";
+            return;
+        }
+        
+        if (_userProfile.Educations.Any(edu =>
+                (!string.IsNullOrEmpty(edu.Institution) || !string.IsNullOrEmpty(edu.Qualification) || !string.IsNullOrEmpty(edu.Duration)) &&
+                (!string.IsNullOrWhiteSpace(edu.InstitutionErrorMsg) ||
+                 !string.IsNullOrWhiteSpace(edu.QualificationErrorMsg) ||
+                 !string.IsNullOrWhiteSpace(edu.DurationErrorMsg))))
+        {
+            errorMessage = "Please correct the errors in Education section.";
+            return;
+        }
+
+        if (Id != Guid.Empty)
+            _userProfile.Id = Id;
+
+        Console.WriteLine("Form submitted!");
+
+        var saveSuccessful = await UserProfileService.SaveUserProfileAsync(_userProfile);
+        if (saveSuccessful && selectedImageFile != null)
+        {
+            using var content = new MultipartFormDataContent();
+            var fileContent = new StreamContent(selectedImageFile.OpenReadStream(5242880));
+            fileContent.Headers.ContentType = new MediaTypeHeaderValue(selectedImageFile.ContentType);
+            content.Add(fileContent, "file", selectedImageFile.Name);
+
+            var response = await UserProfileService.UploadProfilePicture(Id, content);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var imagePath = await response.Content.ReadAsStringAsync();
+                _userProfile.ImageUrl = imagePath; // Update ImageUrl with the path returned from the server
+                NavigationManager.NavigateTo($"/profile/{Id}");
+            }
+        }
+        else if (saveSuccessful)
+        {
+            NavigationManager.NavigateTo($"/profile/{Id}");
+        }
+        else
+        {
+            errorMessage = "There was an error saving the profile.";
+        }
+    }
+
+    <!--Skills-->
+    private Skill selectedSkill = new Skill();
+
+    void AddSkill()
+    {
+        var chosenSkill = _availableSkills.FirstOrDefault(s => s.Id == selectedSkill.Id);
+        if (chosenSkill != null)
+        {
+            _userProfile.Skills.Add(chosenSkill);
+            _availableSkills.Remove(chosenSkill); 
+            selectedSkill = new Skill();
+        }
+    }
+
+    void RemoveSkill(Skill skill)
+    {
+        var skillToRemove = _userProfile.Skills.FirstOrDefault(s => s.Id == skill.Id);
+        if (skillToRemove != null)
+        {
+            _userProfile.Skills.Remove(skillToRemove);
+            _availableSkills.Add(skillToRemove); 
+        }
+    }
+
+    <!--Hobbies-->
+    private Hobby selectedHobby = new Hobby();
+
+    void AddHobby()
+    {
+        var chosenHobby = _availableHobbies.FirstOrDefault(h => h.Id == selectedHobby.Id);
+        if (chosenHobby != null)
+        {
+            _userProfile.Hobbies.Add(chosenHobby);
+            _availableHobbies.Remove(chosenHobby);
+            selectedHobby = new Hobby();
+        }
+    }
+
+    void RemoveHobby(Hobby hobby)
+    {
+        var hobbyToRemove = _userProfile.Hobbies.FirstOrDefault(h => h.Id == hobby.Id);
+        if (hobbyToRemove != null)
+        {
+            _userProfile.Hobbies.Remove(hobbyToRemove);
+            _availableHobbies.Add(hobbyToRemove);
+        }
+    }
+
+    public void ValidateWorkHistory(WorkHistory work)
+    {
+        if (string.IsNullOrWhiteSpace(work.Company) &&
+            string.IsNullOrWhiteSpace(work.Position) &&
+            string.IsNullOrWhiteSpace(work.Duration) &&
+            string.IsNullOrWhiteSpace(work.Description))
+        {
+            // All fields are empty, so clear the validation messages
+            work.CompanyErrorMsg = null;
+            work.PositionErrorMsg = null;
+            work.DurationErrorMsg = null;
+            work.DescriptionErrorMsg = null;
+            return; // Exit the method early since there's nothing else to check
+        }
+
+        work.CompanyErrorMsg = string.IsNullOrWhiteSpace(work.Company) ? "Company field must be filled." : null;
+        work.PositionErrorMsg = string.IsNullOrWhiteSpace(work.Position) ? "Position field must be filled." : null;
+        work.DurationErrorMsg = string.IsNullOrWhiteSpace(work.Duration) ? "Duration field must be filled." : null;
+        work.DescriptionErrorMsg = string.IsNullOrWhiteSpace(work.Description) ? "Description field must be filled." : null;
+    }
+
+    public void ValidateEducation(Education edu)
+    {
+        if (string.IsNullOrWhiteSpace(edu.Institution) &&
+            string.IsNullOrWhiteSpace(edu.Qualification) &&
+            string.IsNullOrWhiteSpace(edu.Duration))
+        {
+            // All fields are empty, so clear the validation messages
+            edu.InstitutionErrorMsg = null;
+            edu.QualificationErrorMsg = null;
+            edu.DurationErrorMsg = null;
+            return; // Exit the method early since there's nothing else to check
+        }
+
+        edu.InstitutionErrorMsg = string.IsNullOrWhiteSpace(edu.Institution) ? "Institution field must be filled." : null;
+        edu.QualificationErrorMsg = string.IsNullOrWhiteSpace(edu.Qualification) ? "Qualification field must be filled." : null;
+        edu.DurationErrorMsg = string.IsNullOrWhiteSpace(edu.Duration) ? "Duration field must be filled." : null;
+    }
+
+    private IBrowserFile selectedImageFile;
+
+    private async Task OnInputFileChange(InputFileChangeEventArgs e)
+    {
+        selectedImageFile = e.File;
+        var imageFile = e.File;
+        if (imageFile != null)
+        {
+            using var stream = imageFile.OpenReadStream(5242880);
+            var buffer = new byte[imageFile.Size];
+            await stream.ReadAsync(buffer, 0, buffer.Length);
+            
+            var base64Image = Convert.ToBase64String(buffer);
+            
+            _userProfile.ImageUrl = $"data:{imageFile.ContentType};base64,{base64Image}";
+        }
+    }
+
+
+}

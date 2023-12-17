@@ -1,0 +1,27 @@
+﻿@page "/index"
+@page "/index/{ActiveFilterId:guid}"
+
+<div class="background-image-area">
+    @code
+    {
+        [Parameter]
+        public Guid ActiveFilterId { get; set; } = Guid.Empty;
+    }
+
+    <PageTitle>Index</PageTitle>
+
+    <UserProfileList />
+</div>
+
+<style>
+    .background-image-area {
+        /*background: url('Media/BG1.png') no-repeat center center fixed; */
+        background-color: #eaeaea;
+        -webkit-background-size: cover;
+        -moz-background-size: cover;
+        -o-background-size: cover;
+        background-size: cover;
+        height: 100%;
+        width: 100%;
+    }
+</style>

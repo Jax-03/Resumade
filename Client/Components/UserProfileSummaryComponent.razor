@@ -1,0 +1,57 @@
+﻿@inject NavigationManager NavigationManager
+@code {
+    [Parameter]
+    public UserProfileSummary UserProfileSummary { get; set; }
+
+    private void NavigateToUserProfile() 
+    {
+        NavigationManager.NavigateTo($"/profile/{UserProfileSummary.Id}");
+    }
+    
+    private string GetProfilePictureUrl(string imageUrl)
+    {
+        return string.IsNullOrEmpty(imageUrl) ? "Media/ProfilePictures/Default.jpg" : imageUrl;
+    }
+}
+
+<div class="card mb-3">
+    <div class="row no-gutters">
+        <div class="col-md-1" style="margin-right: 1.5rem;">
+            <img src="@GetProfilePictureUrl(UserProfileSummary.ImageUrl)" alt="Profile Picture" 
+                 class="img-fluid" style="width: 5.5rem; height: 5.5rem; margin: 1.5rem; object-fit: cover; border-radius: 50%;" />
+
+        </div>
+        <div class="col-md-8">
+            <div class="card-body">
+                <h5 class="card-title" style="color: #2267af;">@UserProfileSummary.FullName</h5>
+                <p class="card-text" style="color:#fe5f63;"><small class="text-muted">@UserProfileSummary.Industry</small></p>
+                <p class="card-text">@UserProfileSummary.Phone | @UserProfileSummary.Email | @UserProfileSummary.Location</p>
+                <p class="card-text">@UserProfileSummary.Summary</p>
+                <a @onclick="NavigateToUserProfile" class="btn view-resume-btn">VIEW RESUME</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card-img {
+        width: 100%;
+        border-radius: 50%;
+    }
+    .card {
+        margin: 0 auto;
+    }
+    
+    .view-resume-btn {
+        background-color:#fe5f63;
+        border-radius: 14px;
+        border: none;
+        color: white;
+        font-size: 16px;
+        cursor: pointer;
+    }
+    
+    .view-resume-btn:hover {
+       opacity: 0.8;
+    }
+</style>

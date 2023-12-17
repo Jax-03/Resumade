@@ -1,0 +1,56 @@
+﻿@page "/"
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+
+<AuthorizeView>
+    <NotAuthorized>
+        <div class="container marketing-background">
+            <div class="row p-5">
+                <div class="col-md-4 marketing-content">
+                    <h1>Ready to take the next step in your career?</h1>
+                    <p>Sign up today to take the first step towards landing your dream job.</p>
+                    <div class="d-flex justify-content-start">
+                        <button class="btn" style="background-color: #fe5f63; margin-right: 1rem; color: white; border-radius: 20px;" @onclick="Register">Sign Up</button> 
+                        <button class="btn" style="background-color: #fe5f63; color: white; border-radius: 20px;" @onclick="Login">Login</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        if (authState.User.Identity.IsAuthenticated)
+        {
+            Navigation.NavigateTo("/index");
+        }
+    }
+
+    private void Register()
+    {
+        Navigation.NavigateTo("/authentication/register");
+    }
+
+    private void Login()
+    {
+        Navigation.NavigateTo("/authentication/login");
+    }
+}
+
+<style>
+    .marketing-background {
+        background: url('./Media/BG2.png') no-repeat center center fixed;
+        -webkit-background-size: cover;
+        -moz-background-size: cover;
+        -o-background-size: cover;
+        background-size: cover;
+        height: 100vh;
+        width: 100%;
+    }
+    .marketing-content {
+        color: #2267af;
+    }
+</style>

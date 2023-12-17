@@ -1,0 +1,162 @@
+﻿@code {
+    [Parameter] public UserProfile Profile { get; set; }
+
+    private string GetProfilePictureUrl(string imageUrl)
+    {
+        return string.IsNullOrEmpty(imageUrl) ? "Media/ProfilePictures/Default.jpg" : imageUrl;
+    }
+
+}
+
+<div class="card">
+    <div class="card-body">
+        <div class="row mb-3">
+            <!-- Profile picture column -->
+            <div class="col-auto">
+                <img src="@GetProfilePictureUrl(Profile.ImageUrl)" alt="Profile Picture" class="img-fluid" style="width: 7.5rem; height: 7.5rem; margin: 2rem; object-fit: cover; border-radius: 50%;"/>
+            </div>
+            <!-- Profile info column -->
+            <div class="col">
+                <h2 class="text-primary">@Profile.FullName</h2>
+                <p class="text-muted">@Profile.Industry?.Name</p>
+                <p>@Profile.Phone | @Profile.Email | @Profile.Location</p>
+                <p>@Profile.Summary</p>
+            </div>
+        </div>
+
+        <!-- Divider line -->
+        <hr>
+
+        @if(Profile.WorkHistories.Any())
+        {
+            <div class="work-history mb-4">
+                <h3 class="text-primary">Work History</h3>
+                @foreach (var work in Profile.WorkHistories)
+                {
+                    <div class="mb-3">
+                        <h4>@work.Position at @work.Company</h4>
+                        <p class="text-muted">@work.Duration</p>
+                        <p>@work.Description</p>
+                    </div>
+                    <hr>
+                }
+            </div>
+        }
+
+        @if (Profile.Educations.Any())
+        {
+            <div class="education mb-4">
+                <h3 class="text-primary">Education</h3>
+                @foreach (var edu in Profile.Educations)
+                {
+                    <div class="mb-3">
+                        <h4>@edu.Qualification from @edu.Institution</h4>
+                        <p class="text-muted">@edu.Duration</p>
+                    </div>
+                    <hr>
+                }
+            </div>
+        }
+
+        @if (Profile.Skills.Any())
+        {
+            <div class="skills mb-4">
+                <h3 class="text-primary">Skills</h3>
+                <ul class="list-inline">
+                    @foreach (var skill in Profile.Skills)
+                    {
+                        <li class="list-inline-item badge bg-secondary">@skill.Name</li>
+                    }
+                </ul>
+                <hr>
+            </div>
+        }
+
+        @if (Profile.Hobbies.Any())
+        {
+            <div class="hobbies">
+                <h3 class="text-primary">Hobbies</h3>
+                <ul class="list-inline">
+                    @foreach (var hobby in Profile.Hobbies)
+                    {
+                        <li class="list-inline-item badge bg-secondary">@hobby.Name</li>
+                    }
+                </ul>
+            </div>
+        }
+    </div>
+</div>
+
+<style>
+.card {
+    margin: auto;
+    max-width: 70%; /* Adjust as needed */
+    border-radius: 0.5rem;
+    box-shadow: 0 0.46875rem 2.1875rem rgb(90 97 105 / 10%), 
+                0 0.9375rem 1.40625rem rgb(90 97 105 / 10%), 
+                0 0.25rem 0.53125rem rgb(90 97 105 / 12%), 
+                0 0.125rem 0.1875rem rgb(90 97 105 / 10%);
+}
+
+/* Profile picture styles */
+.profile-picture {
+    background-color: #007bff; /* Bootstrap primary color */
+    border-radius: 50%;
+    width: 100px;
+    height: 100px;
+    /* Remove any absolute positioning */
+}
+
+/* Correct the layout of the columns */
+.col-md-9 {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+/* Card body adjustments */
+.card-body {
+    padding: 1.5rem;
+}
+
+
+
+/* Additional styles for alignment and layout */
+.row {
+    align-items: center; /* Aligns the items vertically */
+}
+
+/* Style for the horizontal divider */
+.hr {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+}
+
+.user-profile h2, .user-profile h3 {
+    color: #007bff; /* Bootstrap primary color */
+}
+
+.user-profile .work-history h4,
+.user-profile .education h4 {
+    font-size: 1.25rem; /* Adjust as needed */
+}
+
+.user-profile p,
+.user-profile ul {
+    font-size: 1rem; /* Adjust as needed */
+}
+
+.user-profile hr {
+    border-top: 1px solid #eee;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+}
+
+.user-profile .badge {
+    margin: 0.125rem;
+}
+
+.list-inline-item:not(:last-child) {
+    margin-right: 0.5rem;
+}
+</style>

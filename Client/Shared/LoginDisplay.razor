@@ -1,0 +1,158 @@
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@inject NavigationManager Navigation
+@inject UserProfileService UserProfileService
+@inject IAccessTokenProvider TokenProvider 
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<AuthorizeView>
+    <Authorized>
+        <div class="container-fluid">
+            <!-- Use container-fluid for full width -->
+            <div class="row align-items-center justify-content-between">
+                <!-- This class will space children -->
+                <!-- Assign one column to the title and allow it to grow -->
+                <div class="col">
+                    <div style="position: relative; width: 100px; height: 100px;">
+                        <object type="image/svg+xml" data="/Media/LogoSvg.svg" width="100" height="100">
+                            Resumade 
+                        </object>
+                        <div @onclick="NavigateToHome" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; cursor: pointer;"></div>
+                    </div>
+                </div>
+                <div class="col d-flex justify-content-end">
+                    <div class="d-flex align-items-center">
+                        <a href="authentication/profile" class="me-2">Hello, @userName</a>
+                        @if (!IsProfilePage())
+                        {
+                            <a @onclick="NavigateToProfile" target="_blank">Profile</a>
+                        }
+                        @if (IsCurrentUserProfilePage())
+                        {
+                            <a @onclick="NavigateToEditProfile" target="_blank">Edit</a>
+                        }
+                        <button class="nav-link btn btn-link me-2" @onclick="BeginLogOut">Log out</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </Authorized>
+
+    <NotAuthorized>
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col d-flex justify-content-between">
+                    <h1>Resumade</h1>
+                    <div class="pt-3">
+                        <a href="authentication/register" class="me-2">Register</a>
+                        <a href="authentication/login" class="me-2">Log in</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </NotAuthorized>
+</AuthorizeView>
+
+@code{
+    private Guid userGuid;
+    private string userName;
+    private bool isProfilePage;
+
+    private void NavigateToHome()
+    {
+        Navigation.NavigateTo("/");
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Navigation.LocationChanged += HandleLocationChanged;
+        await UpdateUserInformation();
+        UpdateIsProfilePageFlag();
+    }
+
+    private async void HandleLocationChanged(object sender, LocationChangedEventArgs e)
+    {
+        await UpdateUserInformation();
+        UpdateIsProfilePageFlag();
+        StateHasChanged();
+    }
+
+    private bool IsCurrentUserProfilePage()
+    {
+        if (Navigation.Uri.Contains("/profile/"))
+        {
+            var uriSegments = new Uri(Navigation.Uri).Segments;
+            if (uriSegments.Length > 0)
+            {
+                var lastSegment = uriSegments.Last().Trim('/');
+                if (Guid.TryParse(lastSegment, out var urlGuid))
+                {
+                    return urlGuid == userGuid;
+                }
+            }
+        }
+
+        return false;
+    }
+
+
+    private async Task UpdateUserInformation()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity.IsAuthenticated)
+        {
+            userName = user.Identity.Name; // Get the user's name
+
+            var tokenResult = await TokenProvider.RequestAccessToken();
+            if (tokenResult.TryGetToken(out var token))
+            {
+                userGuid = await UserProfileService.GetProfileGuidByName(userName);
+            }
+        }
+    }
+
+    private void UpdateIsProfilePageFlag()
+    {
+        isProfilePage = Navigation.Uri.Contains("/profile/");
+    }
+
+    private async void NavigateToProfile()
+    {
+        if (userGuid != Guid.Empty)
+        {
+            var result = await UserProfileService.GetProfileById(userGuid);
+            if (result.Id == Guid.Empty)
+            {
+                Navigation.NavigateTo($"/editProfile/{userGuid.ToString()}");
+            }
+            else
+            {
+                Navigation.NavigateTo($"/profile/{userGuid.ToString()}");
+            }
+        }
+    }
+
+    private void BeginLogOut()
+    {
+        Navigation.NavigateToLogout("authentication/logout");
+    }
+
+    private bool IsProfilePage()
+    {
+        return Navigation.Uri.Contains("/profile/");
+    }
+
+    private void NavigateToEditProfile()
+    {
+        Navigation.NavigateTo($"/editProfile/{userGuid}");
+    }
+
+    public void Dispose()
+    {
+        Navigation.LocationChanged -= HandleLocationChanged;
+    }
+
+}

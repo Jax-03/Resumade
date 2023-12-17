@@ -1,0 +1,83 @@
+﻿@inherits LayoutComponentBase
+@inject NavigationManager NavigationManager
+
+<div class="top-row px-4 auth">
+    <LoginDisplay />
+</div>
+
+<div class="page">
+    <CascadingValue Value="@activeFilterId" Name="ActiveFilterId">
+        <!-- Sidebar Navigation -->
+        @if (ShouldDisplayNav())
+        {
+            <div class="sidebar" style="flex-shrink: 0;">
+                <NavMenu OnIndustrySelected="@OnIndustrySelected" />
+            </div>
+        }
+
+        <main>
+            <article class="content px-4" style="background-color: #eaeaea">
+                @Body
+            </article>
+        </main>
+        
+        <footer class="footer px-4 py-2 text-center">
+            <span class="text-dark">Resumade 2023 | All Rights Reserved</span>
+        </footer>
+    </CascadingValue>
+</div>
+
+@code {
+    private Guid activeFilterId;
+    
+    void OnIndustrySelected(Guid industryId)
+    {
+        activeFilterId = industryId;
+        StateHasChanged(); 
+    }
+    
+    private bool ShouldDisplayNav()
+    {
+        var absoluteUrl = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
+        var route = absoluteUrl.AbsolutePath;
+
+        var guidPattern = @"^/index/[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}$";
+        
+        return route == "/index" || System.Text.RegularExpressions.Regex.IsMatch(route, guidPattern);
+    }
+}
+
+<style>
+    .top-row {
+        width: 100%;
+        position: fixed;
+        top: 0;
+        z-index: 1030;
+        background-color: #fff;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .page {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+    }
+    
+    main {
+        flex: 1;
+        padding-bottom: 70px;
+    }
+    
+    .footer {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: #50bdf7;
+        
+    }
+    
+    body{
+        background-color: #eaeaea;
+    }
+</style>
